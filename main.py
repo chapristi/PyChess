@@ -39,6 +39,10 @@ class Pawn():
         pos = self.getPos()
         key = (self.alreadyPlayed, self.color)
         moves = [(pos[0] + m[0], pos[1] + m[1]) for m in moves_dict[key]]
+        #verifier que le tableau moove ne contient pas des positions de pions 
+        # sinon il faut les suprimer 
+        # ensuite il faut verifier si le pions peut manger des piosn en diagonales
+        
         return moves
         
     
@@ -66,6 +70,13 @@ class Knight(Pawn):
 
 
 game_on = True
+
+class Audio():
+    def __init__(self,file:str) -> None:
+        pygame.mixer.init()
+        pygame.mixer.music.load(file)
+        pygame.mixer.music.play(-1) # If the loops is -1 then the music will repeat indefinitely.
+
 class Game():
     def __init__(self) -> None:
         self.selected_pawn = None #verifier a chaque fois que le pions soit de la couleur du joeur actuelle 
@@ -150,6 +161,7 @@ class Game():
             screen.blit(blackPawn.getSprite(),(blackPawn.getPos()[0]*CELL_SIZE,blackPawn.getPos()[1]*CELL_SIZE))
 
 game = Game()
+#Audio("BJCODE.mp3")#lance la musique
 while game_on:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -158,9 +170,11 @@ while game_on:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1: # 1 == left button
                 game.handleClick()
+      
+        
+
 
     screen.fill(pygame.Color("white"))
-
     game.make_plate()#afficher le plateau
     game.placePawns()#afficher les pions sur le plateau
     pygame.display.update()
