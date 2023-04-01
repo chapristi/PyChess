@@ -65,26 +65,27 @@ class Pawn():
     
 
 class King(Pawn):
-    def __init__(self,x: int ,y: int, sprite : pygame.Surface,color:str) -> None:
+    def __init__(self,x: int ,y: int, sprite: pygame.Surface,color: str) -> None:
         super().__init__(x, y, sprite,color) 
     def getMoves():
         pass
 class Queen(Pawn):
-    def __init__(self, x:int, y:int, sprite : pygame.Surface,color:str) -> None:
+    def __init__(self, x: int, y: int, sprite: pygame.Surface,color: str) -> None:
         super().__init__(x, y, sprite,color) 
 class Bishop(Pawn):
-    def __init__(self,x:int ,y:int ,sprite: pygame.Surface,color:str) -> None:
+    def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
         super().__init__(x, y, sprite,color) 
 class Rook(Pawn):
-    def __init__(self,x:int,y:int,sprite:pygame.Surface,color:str) -> None:
+    def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
         super().__init__(x, y, sprite,color)
 class Knight(Pawn):
-    def __init__(self,x:int,y:int,sprite:pygame.Surface,color:str) -> None:
+    def __init__(self,x: int, y: int, sprite: pygame.Surface, color:str) -> None:
         super().__init__(x, y, sprite,color)  
 
 game_on = True
 class Audio():
-    def __init__(self,file:str) -> None:
+    def __init__(self,file: str) -> None:
+        self.playlist = [] #on enregistrera tout les musique de la playlist ici
         pygame.mixer.init()
         pygame.mixer.music.load(file)
         pygame.mixer.music.play(-1) # If the loops is -1 then the music will repeat indefinitely.
@@ -118,7 +119,7 @@ class Game():
             self.WHITE_PAWNS.append(Pawn(i,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]))
             self.BLACK_PAWNS.append(Pawn(i,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]))    
 
-    def setActualPlayer(self):
+    def setActualPlayer(self) -> None:
         """
            allows you to define the player who will play
         """
@@ -126,9 +127,9 @@ class Game():
             self.actual_player =  COLOR_TAB[0]
         else:
             self.actual_player =  COLOR_TAB[1]
-    def resetSelectedPawn(self):
+    def resetSelectedPawn(self) -> None:
         self.selected_pawn = None
-    def handleClick(self):
+    def handleClick(self) -> None:
         x = (( pygame.mouse.get_pos()[0]) // CELL_SIZE)#position x du click
         y = (( pygame.mouse.get_pos()[1])// CELL_SIZE)#position y du click
         print("click à la position" , (x,y))
@@ -160,7 +161,7 @@ class Game():
                 rect = pygame.Rect(ligne*CELL_SIZE,colonne*CELL_SIZE,CELL_SIZE,CELL_SIZE)
                 x = ( ligne % 2 == 0 ) ^ ( colonne % 2 == 0 )
                 pygame.draw.rect(screen,pygame.Color(COLOR_TAB[x]),rect)
-    def placePawns(self):
+    def placePawns(self) -> None:
         """
             allows you to position the pieces on the game board
         """
