@@ -5,7 +5,7 @@ import pygame
 screen = pygame.display.set_mode(size=(NB_COL* CELL_SIZE, NB_ROW * CELL_SIZE))
 timer = pygame.time.Clock()
 class Pawn():
-    def __init__(self, x: int, y : int,sprite,color:str) -> None:
+    def __init__(self, x: int, y : int,sprite:pygame.Surface,color:str) -> None:
        self.alreadyPlayed = False #False par default
        self.color = color
        self.x = x 
@@ -22,7 +22,7 @@ class Pawn():
         self.y = y
         # si la fonction est appelé on considere que le pion a jouer uen fois
         self.setAlreadyPlayed()
-    def getSprite(self):
+    def getSprite(self)->pygame.Surface:
         return self.sprite
     def getColor(self) -> str:
         return self.color
@@ -42,35 +42,30 @@ class Pawn():
         #verifier que le tableau moove ne contient pas des positions de pions 
         # sinon il faut les suprimer 
         # ensuite il faut verifier si le pions peut manger des piosn en diagonales
-        
+
         return moves
         
     
 
 class King(Pawn):
-    def __init__(self,x: int ,y: int, sprite,color:str) -> None:
+    def __init__(self,x: int ,y: int, sprite : pygame.Surface,color:str) -> None:
         super().__init__(x, y, sprite,color) 
     def getMoves():
         pass
 class Queen(Pawn):
-    def __init__(self, x, y, sprite,color) -> None:
+    def __init__(self, x:int, y:int, sprite : pygame.Surface,color:str) -> None:
         super().__init__(x, y, sprite,color) 
 class Bishop(Pawn):
-    def __init__(self,x ,y ,sprite,color) -> None:
+    def __init__(self,x:int ,y:int ,sprite: pygame.Surface,color:str) -> None:
         super().__init__(x, y, sprite,color) 
 class Rook(Pawn):
-    def __init__(self,x,y,sprite,color) -> None:
+    def __init__(self,x:int,y:int,sprite:pygame.Surface,color:str) -> None:
         super().__init__(x, y, sprite,color)
 class Knight(Pawn):
-    def __init__(self,x,y,sprite,color) -> None:
+    def __init__(self,x:int,y:int,sprite:pygame.Surface,color:str) -> None:
         super().__init__(x, y, sprite,color)  
 
-
-
-
-
 game_on = True
-
 class Audio():
     def __init__(self,file:str) -> None:
         pygame.mixer.init()
