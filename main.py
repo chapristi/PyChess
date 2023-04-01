@@ -102,14 +102,6 @@ class Game():
             Bishop(5,0,BLACK_BISHOP_SPRITE,COLOR_TAB[1]),
             King(3,0,BLACK_KING_SPRITE,COLOR_TAB[1]),
             Queen(4,0,BLACK_QUEEN_SPRITE,COLOR_TAB[1]),
-            Pawn(0,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]),
-            Pawn(1,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]),
-            Pawn(2,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]),
-            Pawn(3,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]),
-            Pawn(4,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]),
-            Pawn(5,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]),
-            Pawn(6,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]),
-            Pawn(7,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]),
             ]
         self.WHITE_PAWNS = [
             Rook(0,7,WHITE_ROOK_SPRITE,COLOR_TAB[0]),
@@ -120,16 +112,12 @@ class Game():
             Bishop(5,7,WHITE_BISHOP_SPRITE,COLOR_TAB[0]),
             King(3,7,WHITE_KING_SPRITE,COLOR_TAB[0]),
             Queen(4,7,WHITE_QUEEN_SPRITE,COLOR_TAB[0]),
-
-            Pawn(0,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
-            Pawn(1,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
-            Pawn(2,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
-            Pawn(3,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
-            Pawn(4,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
-            Pawn(5,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
-            Pawn(6,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
-            Pawn(7,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
         ]
+        # ajouter les pions
+        for i in range(8):
+            self.WHITE_PAWNS.append(Pawn(i,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]))
+            self.BLACK_PAWNS.append(Pawn(i,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]))    
+
     def setActualPlayer(self):
         """
            allows you to define the player who will play
