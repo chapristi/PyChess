@@ -41,7 +41,7 @@ class Pawn():
              Returns the position of the pawn as a tuple (x,y)
         """
         return (self.x,self.y)
-    def isOutOfBoard(x: int, y: int) -> bool:
+    def isOutOfBoard(self, x: int, y: int) -> bool:
         """
             renvoie True si les coordonnées sont en dehors du plateau de jeu sinon False
         """
