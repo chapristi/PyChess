@@ -41,21 +41,35 @@ class Pawn():
              Returns the position of the pawn as a tuple (x,y)
         """
         return (self.x,self.y)
+    def isOutOfBoard(x: int, y: int) -> bool:
+        """
+            renvoie True si les coordonnées sont en dehors du plateau de jeu sinon False
+        """
+        return not (0 <= x <= 7 and 0 <= y <= 7)
+    
     def getMoves(self): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
         #on rappelle que les pions mangent en diagonal
 
         """
             flips positions where the pawn can go
         """ 
+        pawns = []
         moves_dict = {
             (False, COLOR_TAB[0]): [(0, -2), (0, -1)],
             (True, COLOR_TAB[0]): [(0, -1)],
             (False, COLOR_TAB[1]): [(0, 2), (0, 1)],
             (True, COLOR_TAB[1]): [(0, 1)],
          }
-        pos = self.getPos()
+        x,y = self.getPos()
         key = (self.alreadyPlayed, self.color)
-        moves = [(pos[0] + m[0], pos[1] + m[1]) for m in moves_dict[key]]
+        moves = [(x + m[0], y + m[1]) for m in moves_dict[key]]
+        #enlever les cases ou un pion s'y trouve deja.
+        # test mais ne resembleras pas a ca car c'est un tableau d'object au final donc surcouche de condition a la fin
+        if (not self.isOutOfBoard((x+1),(y-1)) and self.color == COLOR_TAB[0] and (x+1),(y- 1) in pawns):
+            moves.append((x+1),(y- 1))
+        if (not self.isOutOfBoard((x-1),(y-1)) and self.color == COLOR_TAB[0] and (x-1),(y-1) in pawns):
+            moves.append((x-1),(y - 1))
+
         #verifier que le tableau moove ne contient pas des positions de pions 
         # sinon il faut les suprimer 
         # ensuite il faut verifier si le pions peut manger des piosn en diagonales
