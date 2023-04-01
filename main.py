@@ -7,29 +7,46 @@ timer = pygame.time.Clock()
 class Pawn():
     def __init__(self, x: int, y : int,sprite:pygame.Surface,color:str) -> None:
        self.alreadyPlayed = False #False par default
-       self.color = color
-       self.x = x 
-       self.y = y
-       self.sprite = sprite
+       self.color = color #la couleur de la piece
+       self.x = x #position x de la piece
+       self.y = y #position y de la piece
+       self.sprite = sprite #sprite de la piece
     def setAlreadyPlayed(self):
         """
-            une fois appelé elle met a true l'attribut AlreadyPlayed
+            once called it sets the AlreadyPlayed attribute to true
         """
         self.alreadyPlayed = True
 
     def setNewPos(self,x:int,y:int):
+        """
+            Allows you to define a new position x and y to the piece and already
+            passes Player to True to say that the piece is played at least Once.
+        """
         self.x = x 
         self.y = y
         # si la fonction est appelé on considere que le pion a jouer uen fois
         self.setAlreadyPlayed()
     def getSprite(self)->pygame.Surface:
+        """
+            returns the sprite of the pawn
+        """
         return self.sprite
     def getColor(self) -> str:
+        """
+            returns the color of the pawn
+        """
         return self.color
     def getPos(self):
+        """
+             Returns the position of the pawn as a tuple (x,y)
+        """
         return (self.x,self.y)
     def getMoves(self): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
-        #on rappelle que les pions mangent en diagonal 
+        #on rappelle que les pions mangent en diagonal
+
+        """
+            flips positions where the pawn can go
+        """ 
         moves_dict = {
             (False, COLOR_TAB[0]): [(0, -2), (0, -1)],
             (True, COLOR_TAB[0]): [(0, -1)],
@@ -114,6 +131,9 @@ class Game():
             Pawn(7,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]),
         ]
     def setActualPlayer(self):
+        """
+           allows you to define the player who will play
+        """
         if self.actual_player == COLOR_TAB[1]:
             self.actual_player =  COLOR_TAB[0]
         else:
@@ -143,13 +163,19 @@ class Game():
         return
         
     # pour atteindre la bonne case on multiplie la case qu'on veut par CELL_SIZE
-    def make_plate(self) -> None:
+    def make_board(self) -> None:
+        """
+             allows you to create the game board
+        """
         for ligne in range(0,NB_COL):
             for colonne in range(0,NB_COL):
                 rect = pygame.Rect(ligne*CELL_SIZE,colonne*CELL_SIZE,CELL_SIZE,CELL_SIZE)
                 x = ( ligne % 2 == 0 ) ^ ( colonne % 2 == 0 )
                 pygame.draw.rect(screen,pygame.Color(COLOR_TAB[x]),rect)
     def placePawns(self):
+        """
+            allows you to position the pieces on the game board
+        """
         for whitePawn in self.WHITE_PAWNS:
             screen.blit(whitePawn.getSprite(),(whitePawn.getPos()[0]*CELL_SIZE,whitePawn.getPos()[1]*CELL_SIZE))
         for blackPawn in self.BLACK_PAWNS:
@@ -170,7 +196,7 @@ while game_on:
 
 
     screen.fill(pygame.Color("white"))
-    game.make_plate()#afficher le plateau
+    game.make_board()#afficher le plateau
     game.placePawns()#afficher les pions sur le plateau
     pygame.display.update()
     timer.tick(20)
