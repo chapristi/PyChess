@@ -2,8 +2,31 @@ from consts import *
 import time
 import sys
 import pygame
+from enum import Enum
+ 
 screen = pygame.display.set_mode(size=(NB_COL* CELL_SIZE, NB_ROW * CELL_SIZE))
 timer = pygame.time.Clock()
+
+
+class Colors(Enum):
+    BLACK = "GRAY"
+    WHITE = "WHITE"
+
+class Player:
+    def __init__(self, couleur):
+        self.color = couleur
+        self.pawns = []
+    def add_pawns(self, pawns):
+        self.pawns = pawns
+    def getPawns(self):
+        return self.pawns
+    def rm_pawns(self, piece):
+        self.pieces.remove(piece)
+
+
+
+
+       
 class Pawn():
     def __init__(self, x: int, y : int,sprite:pygame.Surface,color:str) -> None:
        self.alreadyPlayed = False #False par default
@@ -17,7 +40,7 @@ class Pawn():
         """
         self.alreadyPlayed = True
 
-    def setNewPos(self,x:int,y:int):
+    def setNewPos(self,x :int,y :int):
         """
             Allows you to define a new position x and y to the piece and already
             passes Player to True to say that the piece is played at least Once.
@@ -47,32 +70,30 @@ class Pawn():
         """
         return not (0 <= x <= 7 and 0 <= y <= 7)
     
-    def getMoves(self): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
-        #on rappelle que les pions mangent en diagonal
+    def isAlliesPos(aliesPawns, pos)->bool:
+        for aliesPawn in aliesPawns:
+            if (aliesPawn.getPos() == pos):
+                return (1);
+        return (0);
 
+    def getMoves(self): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
         """
             flips positions where the pawn can go
         """ 
         pawns = []
         moves_dict = {
-            (False, COLOR_TAB[0]): [(0, -2), (0, -1)],
-            (True, COLOR_TAB[0]): [(0, -1)],
-            (False, COLOR_TAB[1]): [(0, 2), (0, 1)],
-            (True, COLOR_TAB[1]): [(0, 1)],
+            (False, Colors.WHITE.value): [(0, -2), (0, -1)],
+            (True, Colors.WHITE.value): [(0, -1)],
+            (False, Colors.BLACK.value): [(0, 2), (0, 1)],
+            (True, Colors.BLACK.value): [(0, 1)],
          }
         x,y = self.getPos()
         key = (self.alreadyPlayed, self.color)
+        #on ajout les mouvements possibles en fonction du moves_dict
         moves = [(x + m[0], y + m[1]) for m in moves_dict[key]]
-        #enlever les cases ou un pion s'y trouve deja.
-        # test mais ne resembleras pas a ca car c'est un tableau d'object au final donc surcouche de condition a la fin
-        if (not self.isOutOfBoard((x+1),(y-1)) and self.color == COLOR_TAB[0] and (x+1),(y- 1) in pawns):
-            moves.append((x+1),(y- 1))
-        if (not self.isOutOfBoard((x-1),(y-1)) and self.color == COLOR_TAB[0] and (x-1),(y-1) in pawns):
-            moves.append((x-1),(y - 1))
 
-        #verifier que le tableau moove ne contient pas des positions de pions 
-        # sinon il faut les suprimer 
-        # ensuite il faut verifier si le pions peut manger des piosn en diagonales
+        #il faut ajouter les mouvement de manger
+        #il faut retirer les emplacements ou des pions de notre couleur existe deja
 
         return moves
         
@@ -107,62 +128,65 @@ class Audio():
 class Game():
     def __init__(self) -> None:
         self.selected_pawn = None #verifier a chaque fois que le pions soit de la couleur du joeur actuelle 
-        self.actual_player  =  COLOR_TAB[0] # se sont les blancs qui commencent à jouer
-        self.BLACK_PAWNS = [
-            Rook(0,0,BLACK_ROOK_SPRITE,COLOR_TAB[1]),
-            Rook(7,0,BLACK_ROOK_SPRITE,COLOR_TAB[1]),
-            Knight(1,0,BLACK_KNGIHT_SPRITE,COLOR_TAB[1]),
-            Knight(6,0,BLACK_KNGIHT_SPRITE,COLOR_TAB[1]),
-            Bishop(2,0,BLACK_BISHOP_SPRITE,COLOR_TAB[1]),
-            Bishop(5,0,BLACK_BISHOP_SPRITE,COLOR_TAB[1]),
-            King(3,0,BLACK_KING_SPRITE,COLOR_TAB[1]),
-            Queen(4,0,BLACK_QUEEN_SPRITE,COLOR_TAB[1]),
+        self.player1 = Player(Colors.WHITE.value)
+        self.player2  = Player(Colors.BLACK.value)
+        black_pawns = [
+            Rook(0,0,BLACK_ROOK_SPRITE,Colors.BLACK.value),
+            Rook(7,0,BLACK_ROOK_SPRITE,Colors.BLACK.value),
+            Knight(1,0,BLACK_KNGIHT_SPRITE,Colors.BLACK.value),
+            Knight(6,0,BLACK_KNGIHT_SPRITE,Colors.BLACK.value),
+            Bishop(2,0,BLACK_BISHOP_SPRITE,Colors.BLACK.value),
+            Bishop(5,0,BLACK_BISHOP_SPRITE,Colors.BLACK.value),
+            King(3,0,BLACK_KING_SPRITE,Colors.BLACK.value),
+            Queen(4,0,BLACK_QUEEN_SPRITE,Colors.BLACK.value),
             ]
-        self.WHITE_PAWNS = [
-            Rook(0,7,WHITE_ROOK_SPRITE,COLOR_TAB[0]),
-            Rook(7,7,WHITE_ROOK_SPRITE,COLOR_TAB[0]),
-            Knight(1,7,WHITE_KNGIHT_SPRITE,COLOR_TAB[0]),
-            Knight(6,7,WHITE_KNGIHT_SPRITE,COLOR_TAB[0]),
-            Bishop(2,7,WHITE_BISHOP_SPRITE,COLOR_TAB[0]),
-            Bishop(5,7,WHITE_BISHOP_SPRITE,COLOR_TAB[0]),
-            King(3,7,WHITE_KING_SPRITE,COLOR_TAB[0]),
-            Queen(4,7,WHITE_QUEEN_SPRITE,COLOR_TAB[0]),
+        white_pawns = [
+            Rook(0,7,WHITE_ROOK_SPRITE, Colors.WHITE.value),
+            Rook(7,7,WHITE_ROOK_SPRITE, Colors.WHITE.value),
+            Knight(1,7,WHITE_KNGIHT_SPRITE, Colors.WHITE.value),
+            Knight(6,7,WHITE_KNGIHT_SPRITE, Colors.WHITE.value),
+            Bishop(2,7,WHITE_BISHOP_SPRITE, Colors.WHITE.value),
+            Bishop(5,7,WHITE_BISHOP_SPRITE, Colors.WHITE.value),
+            King(3,7,WHITE_KING_SPRITE, Colors.WHITE.value),
+            Queen(4,7,WHITE_QUEEN_SPRITE,Colors.WHITE.value),
         ]
         # ajouter les pions
         for i in range(8):
-            self.WHITE_PAWNS.append(Pawn(i,6,WHITE_PAWN_SPRITE,COLOR_TAB[0]))
-            self.BLACK_PAWNS.append(Pawn(i,1,BLACK_PAWN_SPRITE,COLOR_TAB[1]))    
+            white_pawns.append(Pawn(i,6,WHITE_PAWN_SPRITE,Colors.WHITE.value))
+            black_pawns.append(Pawn(i,1,BLACK_PAWN_SPRITE,Colors.BLACK.value))
+        self.player1.add_pawns(white_pawns)
+        self.player2.add_pawns(black_pawns)
+        self.actual_player  = self.player1 # se sont les blancs qui commencent à jouer
 
     def setActualPlayer(self) -> None:
         """
            allows you to define the player who will play
         """
-        if self.actual_player == COLOR_TAB[1]:
-            self.actual_player =  COLOR_TAB[0]
+        if self.actual_player == self.player1:
+            self.actual_player =  self.player2
         else:
-            self.actual_player =  COLOR_TAB[1]
+            self.actual_player =  self.player1
     def resetSelectedPawn(self) -> None:
         self.selected_pawn = None
     def handleClick(self) -> None:
-        x = (( pygame.mouse.get_pos()[0]) // CELL_SIZE)#position x du click
-        y = (( pygame.mouse.get_pos()[1])// CELL_SIZE)#position y du click
+        x = (( pygame.mouse.get_pos()[0]) // CELL_SIZE)  #position x du click
+        y = (( pygame.mouse.get_pos()[1])// CELL_SIZE) #position y du click
         print("click à la position" , (x,y))
-        if self.actual_player == COLOR_TAB[0]:
-            for whitePawn in  self.WHITE_PAWNS:
-                if whitePawn.getPos() == (x,y):
-                    self.selected_pawn = whitePawn
-        else:
-            for blackPawn in  self.BLACK_PAWNS:
-                if blackPawn.getPos() == (x,y):
-                    self.selected_pawn = blackPawn
+        for pawn in  self.actual_player.getPawns():
+            if pawn.getPos() == (x,y):
+                self.selected_pawn = pawn
         if self.selected_pawn != None:
             print(self.selected_pawn.getColor())
             possible_moves = self.selected_pawn.getMoves()
             print(possible_moves)
-            if (x,y) in possible_moves:
-                self.selected_pawn.setNewPos(x,y)
+            if (x, y) in possible_moves:
+                #if (self.actual_player == COLOR_TAB[0]):
+                 #   for blackPawn in  self.BLACK_PAWNS:
+                  #      if (x, y) == blackPawn.getPos():
+                   #         self.BLACK_PAWNS.remove(blackPawn);
+                self.selected_pawn.setNewPos(x, y)
                 self.setActualPlayer()
-                self.selected_pawn = None 
+                self.selected_pawn = None
         return
         
     # pour atteindre la bonne case on multiplie la case qu'on veut par CELL_SIZE
@@ -179,9 +203,9 @@ class Game():
         """
             allows you to position the pieces on the game board
         """
-        for whitePawn in self.WHITE_PAWNS:
+        for whitePawn in self.player1.getPawns():
             screen.blit(whitePawn.getSprite(),(whitePawn.getPos()[0]*CELL_SIZE,whitePawn.getPos()[1]*CELL_SIZE))
-        for blackPawn in self.BLACK_PAWNS:
+        for blackPawn in self.player2.getPawns():
             screen.blit(blackPawn.getSprite(),(blackPawn.getPos()[0]*CELL_SIZE,blackPawn.getPos()[1]*CELL_SIZE))
 
 game = Game()
@@ -194,10 +218,9 @@ while game_on:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1: # 1 == left button
                 game.handleClick()
+                pass
       
         
-
-
     screen.fill(pygame.Color("white"))
     game.make_board()#afficher le plateau
     game.placePawns()#afficher les pions sur le plateau
