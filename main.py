@@ -70,13 +70,19 @@ class Pawn():
         """
         return not (0 <= x <= 7 and 0 <= y <= 7)
     
-    def isAlliesPos(aliesPawns, pos)->bool:
+    def isAlliesPos(self, aliesPawns, pos)->bool:
         for aliesPawn in aliesPawns:
             if (aliesPawn.getPos() == pos):
                 return (1);
         return (0);
 
-    def getMoves(self): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
+    def isEnnemiesPos(self, ennemiesPawns, pos)->bool:
+        for ennemiesPawn in ennemiesPawns:
+            if (ennemiesPawn.getPos() == pos):
+                return (1);
+        return (0);
+
+    def getMoves(self, aliesPawns, ennemiesPawns): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
         """
             flips positions where the pawn can go
         """ 
@@ -91,7 +97,16 @@ class Pawn():
         key = (self.alreadyPlayed, self.color)
         #on ajout les mouvements possibles en fonction du moves_dict
         moves = [(x + m[0], y + m[1]) for m in moves_dict[key]]
-
+        for move in moves:
+            if(self.isAlliesPos(aliesPawns,move)):
+                moves.remove(move)
+        for move in moves:
+            if(self.isEnnemiesPos(ennemiesPawns,move)):
+                moves.remove(move)
+        if (self.color == Colors.WHITE.value and ((x+1),(y - 1)) in ennemiesPawns):
+            moves.append((x+1),(y- 1))
+        if (self.color == Colors.BLACK.value and ((x-1),(y-1)) in ennemiesPawns):
+            moves.append((x-1),(y - 1))
         #il faut ajouter les mouvement de manger
         #il faut retirer les emplacements ou des pions de notre couleur existe deja
 
@@ -177,7 +192,8 @@ class Game():
                 self.selected_pawn = pawn
         if self.selected_pawn != None:
             print(self.selected_pawn.getColor())
-            possible_moves = self.selected_pawn.getMoves()
+            enemies_pawns = self.player2.getPawns() if (self.actual_player.getPawns() == self.player1.getPawns()) else self.player1.getPawns()
+            possible_moves = self.selected_pawn.getMoves(self.actual_player.getPawns(), enemies_pawns)
             print(possible_moves)
             if (x, y) in possible_moves:
                 #if (self.actual_player == COLOR_TAB[0]):
