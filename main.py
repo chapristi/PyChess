@@ -103,10 +103,15 @@ class Pawn():
         for move in moves:
             if(self.isEnnemiesPos(ennemiesPawns,move)):
                 moves.remove(move)
-        if (self.color == Colors.WHITE.value and ((x+1),(y - 1)) in ennemiesPawns):
-            moves.append((x+1),(y- 1))
-        if (self.color == Colors.BLACK.value and ((x-1),(y-1)) in ennemiesPawns):
-            moves.append((x-1),(y - 1))
+        if (self.color == Colors.WHITE.value):
+            for ennemiesPawn in ennemiesPawns:
+                if(ennemiesPawn.getPos() == ((x+1),(y-1))):
+                    moves.append((x+1),(y - 1))
+        if (self.color == Colors.WHITE.value):
+            for ennemiesPawn in ennemiesPawns:
+                if(ennemiesPawn.getPos() == ((x-1),(y-1))):
+                    moves.append((x-1),(y - 1))
+
         #il faut ajouter les mouvement de manger
         #il faut retirer les emplacements ou des pions de notre couleur existe deja
 
