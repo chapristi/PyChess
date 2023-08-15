@@ -86,7 +86,6 @@ class Pawn():
         """
             flips positions where the pawn can go
         """ 
-        pawns = []
         moves_dict = {
             (False, Colors.WHITE.value): [(0, -2), (0, -1)],
             (True, Colors.WHITE.value): [(0, -1)],
@@ -103,21 +102,37 @@ class Pawn():
         for move in moves:
             if(self.isEnnemiesPos(ennemiesPawns,move)):
                 moves.remove(move)
-        if (self.color == Colors.WHITE.value):
-            for ennemiesPawn in ennemiesPawns:
-                if(ennemiesPawn.getPos() == ((x+1),(y-1))):
-                    moves.append((x+1),(y - 1))
-        if (self.color == Colors.WHITE.value):
-            for ennemiesPawn in ennemiesPawns:
-                if(ennemiesPawn.getPos() == ((x-1),(y-1))):
-                    moves.append((x-1),(y - 1))
-
-        #il faut ajouter les mouvement de manger
-        #il faut retirer les emplacements ou des pions de notre couleur existe deja
-
+                
+        if self.color == Colors.BLACK.value:
+            target_positions = [((x + 1), (y + 1)), ((x - 1), (y + 1))]
+        elif self.color == Colors.WHITE.value:
+            target_positions = [((x - 1), (y - 1)), ((x + 1), (y - 1))]
+        for ennemiesPawn in ennemiesPawns:
+            for target_pos in target_positions:
+                if ennemiesPawn.getPos() == target_pos:
+                    moves.append(target_pos)
         return moves
         
-    
+class SlidingPiece(Pawn):
+    def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str, starting_moves: list) -> None:
+        super().__init__(x, y, sprite, color)
+        self.starting_moves = starting_moves
+    def getMoves(self, aliesPawns, ennemiesPawns) -> list:
+        moves = []
+        x,y = super().getPos()
+        for move in self.starting_moves:
+            curr_x,curr_y = (x + move[0]), (y + move[1])
+            stop_loop = False
+            while(not super().isOutOfBoard(curr_x, curr_y) and not super().isAlliesPos(aliesPawns,(curr_x,curr_y)) and not stop_loop):
+                if super().isEnnemiesPos(ennemiesPawns,(curr_x,curr_y)):
+                    moves.append((curr_x, curr_y))
+                    stop_loop = True
+                    continue
+                moves.append((curr_x, curr_y))
+                curr_x,curr_y = (curr_x + move[0]), (curr_y + move[1])
+               
+            curr_x,curr_y = super().getPos()
+        return moves
 
 class King(Pawn):
     def __init__(self,x: int ,y: int, sprite: pygame.Surface,color: str) -> None:
@@ -127,12 +142,25 @@ class King(Pawn):
 class Queen(Pawn):
     def __init__(self, x: int, y: int, sprite: pygame.Surface,color: str) -> None:
         super().__init__(x, y, sprite,color) 
-class Bishop(Pawn):
+class Bishop(SlidingPiece):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
-        super().__init__(x, y, sprite,color) 
-class Rook(Pawn):
-    def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
-        super().__init__(x, y, sprite,color)
+        starting_moves =[
+            (-1, 1),
+            (1, 1),
+            (-1, -1),
+            (1, -1),
+        ]
+        super().__init__(x, y, sprite,color,starting_moves)
+   
+class Rook(SlidingPiece):
+        def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
+            starting_moves =[
+                (0, 1),
+                (0, -1),
+                (1, 0),
+                (-1, 0),
+            ]
+            super().__init__(x, y, sprite,color,starting_moves)
 class Knight(Pawn):
     def __init__(self,x: int, y: int, sprite: pygame.Surface, color:str) -> None:
         super().__init__(x, y, sprite,color)  
