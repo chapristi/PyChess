@@ -196,12 +196,13 @@ class Knight(SlidingPieceSingle):
 
 game_on = True
 class Audio():
-    def __init__(self,file: str) -> None:
-        self.playlist = [] #on enregistrera tout les musique de la playlist ici
+    def __init__(self) -> None:
         pygame.mixer.init()
+    def play(self, file: str):
         pygame.mixer.music.load(file)
-        pygame.mixer.music.play(-1) # If the loops is -1 then the music will repeat indefinitely.
-
+        pygame.mixer.music.play() 
+audio = Audio()
+     
 class Game():
     def __init__(self) -> None:
         self.selected_pawn = None #verifier a chaque fois que le pions soit de la couleur du joeur actuelle 
@@ -252,6 +253,15 @@ class Game():
                 if enemies_pawn.getPos() == current_player_pawn.getPos():
                     enemies_pawns.remove(enemies_pawn)
                     return
+    def is_valid_move(x, y, possible_moves):
+        if (x, y) in possible_moves:
+            return True
+        #verifier si le deplacement se trouve dans le tableau des moves
+        #et verifier si le roi est en echec si oui ne pas autoriser
+        #un deplacment qui l'eneleve pas de echec
+        #ensuite faire fonction isend et passer toutes les postions de touit les piosn dans is_valid
+        #si y a rien un joueur a gagne 
+        pass
     def handleClick(self) -> None:
         x = (( pygame.mouse.get_pos()[0]) // CELL_SIZE)  #position x du click
         y = (( pygame.mouse.get_pos()[1])// CELL_SIZE) #position y du click
@@ -265,6 +275,7 @@ class Game():
             possible_moves = self.selected_pawn.getMoves(self.actual_player.getPawns(), enemies_pawns)
             print(possible_moves)
             if (x, y) in possible_moves:
+                audio.play("pawn_move.wav")
                 self.selected_pawn.setNewPos(x, y)
                 self.eatPawn()
                 self.setActualPlayer()
