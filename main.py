@@ -253,6 +253,16 @@ class Game():
                 if enemies_pawn.getPos() == current_player_pawn.getPos():
                     enemies_pawns.remove(enemies_pawn)
                     return
+    def king_is_check(self):
+        king_pos = ()
+        for pawn in self.actual_player.getPawns():
+            if isinstance(pawn, King):
+                king_pos = pawn.getPos()
+        enemies_pawns = self.player2.getPawns() if (self.actual_player.getPawns() == self.player1.getPawns()) else self.player1.getPawns()
+        for enemies_pawn in enemies_pawns:
+            if enemies_pawn.getPos() == king_pos:
+                return True
+        return False
     def is_valid_move(x, y, possible_moves):
         if (x, y) in possible_moves:
             return True
