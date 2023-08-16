@@ -22,11 +22,7 @@ class Player:
         return self.pawns
     def rm_pawns(self, piece):
         self.pieces.remove(piece)
-
-
-
-
-       
+ 
 class Pawn():
     def __init__(self, x: int, y : int,sprite:pygame.Surface,color:str) -> None:
        self.alreadyPlayed = False #False par default
@@ -34,6 +30,9 @@ class Pawn():
        self.x = x #position x de la piece
        self.y = y #position y de la piece
        self.sprite = sprite #sprite de la piece
+
+    def clone(self):
+        return Pawn(self.x, self.y, self.sprite, self.color)
     def setAlreadyPlayed(self):
         """
             once called it sets the AlreadyPlayed attribute to true
@@ -81,7 +80,25 @@ class Pawn():
             if (ennemiesPawn.getPos() == pos):
                 return (1);
         return (0);
-
+    def is_king_in_check_after_move(self, move, player_pawns, opponent_pawns):
+        copied_player_pawns = [pawn.clone() for pawn in player_pawns]
+        copied_opponent_pawns = [pawn.clone() for pawn in opponent_pawns]
+        print(len(copied_player_pawns),len(player_pawns))
+        for cop_player_pawn in copied_player_pawns:
+            #print("hitle")
+            if self.getPos() == cop_player_pawn.getPos():
+                cop_player_pawn.setNewPos(move[0],move[1])
+        king_pos = ()
+        for pawn in copied_player_pawns:
+            if isinstance(pawn, King):
+                print("test")
+                king_pos = pawn.getPos()
+        for enemy_pawn in copied_opponent_pawns:
+            possible_moves = enemy_pawn.getMoves(copied_opponent_pawns,copied_player_pawns)
+            if king_pos in possible_moves:
+                return True
+        return False
+        
     def getMoves(self, aliesPawns, ennemiesPawns): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
         """
             flips positions where the pawn can go
@@ -112,14 +129,14 @@ class Pawn():
                 if ennemiesPawn.getPos() == target_pos:
                     moves.append(target_pos)
         return moves
-
+    
 class SlidingPieceSingle(Pawn):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str, starting_moves: list) -> None:
         super().__init__(x, y, sprite, color)
         self.starting_moves = starting_moves
     def getMoves(self, aliesPawns, ennemiesPawns) -> list:
         x,y = super().getPos()
-        return [(mx + x, my + y) for mx, my in self.starting_moves if not self.isOutOfBoard(mx+x, my+y) and not self.isAlliesPos(aliesPawns, (mx + x, my + y))]
+        return [(mx + x, my + y) for mx, my in self.starting_moves if not self.isOutOfBoard(mx+x, my+y) and not self.isAlliesPos(aliesPawns, (mx + x, my + y)) and not self.is_king_in_check_after_move((mx + x, my + y),aliesPawns,ennemiesPawns)]
 class SlidingPieceMult(Pawn):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str, starting_moves: list) -> None:
         super().__init__(x, y, sprite, color)
@@ -130,7 +147,7 @@ class SlidingPieceMult(Pawn):
         for move in self.starting_moves:
             curr_x,curr_y = (x + move[0]), (y + move[1])
             stop_loop = False
-            while(not super().isOutOfBoard(curr_x, curr_y) and not super().isAlliesPos(aliesPawns,(curr_x,curr_y)) and not stop_loop):
+            while(not super().isOutOfBoard(curr_x, curr_y) and not super().isAlliesPos(aliesPawns,(curr_x,curr_y)) and not stop_loop and not self.is_king_in_check_after_move((curr_x, curr_y),aliesPawns,ennemiesPawns)):
                 if super().isEnnemiesPos(ennemiesPawns,(curr_x,curr_y)):
                     moves.append((curr_x, curr_y))
                     stop_loop = True
@@ -147,7 +164,8 @@ class King(SlidingPieceSingle):
             (-1, 0),(-1, 1),(1, 1),
             (-1, -1),(1, -1),
         ]
-        super().__init__(x, y, sprite,color,starting_moves) 
+        super().__init__(x, y, sprite,color,starting_moves)
+
 class Queen(SlidingPieceMult):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
             starting_moves =[
@@ -161,6 +179,9 @@ class Queen(SlidingPieceMult):
                 (1, -1),
             ]
             super().__init__(x, y, sprite,color,starting_moves)
+    #def clone(self):
+    #    return Queen(self.x, self.y, self.sprite, self.color)
+
 class Bishop(SlidingPieceMult):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
         starting_moves =[
@@ -170,9 +191,11 @@ class Bishop(SlidingPieceMult):
             (1, -1),
         ]
         super().__init__(x, y, sprite,color,starting_moves)
+    #def clone(self):
+    #    return Bishop(self.x, self.y, self.sprite, self.color)
    
 class Rook(SlidingPieceMult):
-        def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
+    def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
             starting_moves =[
                 (0, 1),
                 (0, -1),
@@ -180,8 +203,11 @@ class Rook(SlidingPieceMult):
                 (-1, 0),
             ]
             super().__init__(x, y, sprite,color,starting_moves)
+    #def clone(self):
+     #   return Rook(self.x, self.y, self.sprite, self.color)
+
 class Knight(SlidingPieceSingle):
-     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
+    def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
         starting_moves = [
             (2, 1),
             (2, -1),
@@ -192,7 +218,9 @@ class Knight(SlidingPieceSingle):
             (-1, 2),
             (-1, -2),
         ] 
-        super().__init__(x, y, sprite,color,starting_moves) 
+        super().__init__(x, y, sprite,color,starting_moves)
+    #def clone(self):
+    #    return Rook(self.x, self.y, self.sprite, self.color)
 
 game_on = True
 class Audio():
@@ -253,16 +281,19 @@ class Game():
                 if enemies_pawn.getPos() == current_player_pawn.getPos():
                     enemies_pawns.remove(enemies_pawn)
                     return
+                
     def king_is_check(self):
         king_pos = ()
+        enemy_pawns = self.player2.getPawns() if (self.actual_player.getPawns() == self.player1.getPawns()) else self.player1.getPawns()
         for pawn in self.actual_player.getPawns():
             if isinstance(pawn, King):
                 king_pos = pawn.getPos()
-        enemies_pawns = self.player2.getPawns() if (self.actual_player.getPawns() == self.player1.getPawns()) else self.player1.getPawns()
-        for enemies_pawn in enemies_pawns:
-            if enemies_pawn.getPos() == king_pos:
+        for enemy_pawn in enemy_pawns:
+            possible_moves = enemy_pawn.getMoves(enemy_pawns, self.actual_player.getPawns())
+            if king_pos in possible_moves:
                 return True
         return False
+    
     def is_valid_move(x, y, possible_moves):
         if (x, y) in possible_moves:
             return True
@@ -273,23 +304,32 @@ class Game():
         #si y a rien un joueur a gagne 
         pass
     def handleClick(self) -> None:
+        #if self.king_is_check():
+            #print("check")
+            #audio.play("check.mp3")
         x = (( pygame.mouse.get_pos()[0]) // CELL_SIZE)  #position x du click
         y = (( pygame.mouse.get_pos()[1])// CELL_SIZE) #position y du click
         print("click à la position" , (x,y))
         for pawn in  self.actual_player.getPawns():
             if pawn.getPos() == (x,y):
                 self.selected_pawn = pawn
+
         if self.selected_pawn != None:
-            print(self.selected_pawn.getColor())
+            #print(self.selected_pawn.getColor())
             enemies_pawns = self.player2.getPawns() if (self.actual_player.getPawns() == self.player1.getPawns()) else self.player1.getPawns()
             possible_moves = self.selected_pawn.getMoves(self.actual_player.getPawns(), enemies_pawns)
-            print(possible_moves)
+            print("moves clicked pawn", possible_moves)
+
             if (x, y) in possible_moves:
                 audio.play("pawn_move.wav")
                 self.selected_pawn.setNewPos(x, y)
                 self.eatPawn()
                 self.setActualPlayer()
                 self.selected_pawn = None
+                if(self.king_is_check()):
+                    print("f")
+                    audio.play("check.mp3")
+               
         return
         
     # pour atteindre la bonne case on multiplie la case qu'on veut par CELL_SIZE
