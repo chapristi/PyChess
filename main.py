@@ -3,7 +3,9 @@ import time
 import sys
 import pygame
 from enum import Enum
- 
+import copy
+import pickle
+
 screen = pygame.display.set_mode(size=(NB_COL* CELL_SIZE, NB_ROW * CELL_SIZE))
 timer = pygame.time.Clock()
 
@@ -30,7 +32,7 @@ class Pawn():
        self.x = x #position x de la piece
        self.y = y #position y de la piece
        self.sprite = sprite #sprite de la piece
-
+    
     def clone(self):
         return Pawn(self.x, self.y, self.sprite, self.color)
     def setAlreadyPlayed(self):
@@ -80,26 +82,36 @@ class Pawn():
             if (ennemiesPawn.getPos() == pos):
                 return (1);
         return (0);
-    def is_king_in_check_after_move(self, move, player_pawns, opponent_pawns):
+   
+    def is_king_in_check_after_move(self, move, player_pawns, enemy_pawns):
         copied_player_pawns = [pawn.clone() for pawn in player_pawns]
-        copied_opponent_pawns = [pawn.clone() for pawn in opponent_pawns]
-        print(len(copied_player_pawns),len(player_pawns))
-        for cop_player_pawn in copied_player_pawns:
-            #print("hitle")
-            if self.getPos() == cop_player_pawn.getPos():
-                cop_player_pawn.setNewPos(move[0],move[1])
+        copied_opponent_pawns = [pawn.clone() for pawn in enemy_pawns]
         king_pos = ()
+        for cop_player_pawn in copied_player_pawns:
+            if self.getPos() == cop_player_pawn.getPos():
+                #print("av",cop_player_pawn.getPos())
+                cop_player_pawn.setNewPos(move[0], move[1])
+                #print("ap", cop_player_pawn.getPos())
+        #print("mov", move[0], move[1])
+        
         for pawn in copied_player_pawns:
             if isinstance(pawn, King):
-                print("test")
+                #print("king")
                 king_pos = pawn.getPos()
+                #print(king_pos)
+        
+        for pawn in copied_player_pawns:
+            if isinstance(pawn, King):
+                king_pos = pawn.getPos()
+
         for enemy_pawn in copied_opponent_pawns:
-            possible_moves = enemy_pawn.getMoves(copied_opponent_pawns,copied_player_pawns)
+            possible_moves = enemy_pawn.getStandardsMoves(copied_opponent_pawns, copied_player_pawns)
+            #print("possible moves", possible_moves)
             if king_pos in possible_moves:
                 return True
         return False
         
-    def getMoves(self, aliesPawns, ennemiesPawns): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
+    def getStandardsMoves(self, aliesPawns, ennemiesPawns): #pawns:list afin de verifier qu'il n'y est pas de pions a l'emplacement
         """
             flips positions where the pawn can go
         """ 
@@ -119,7 +131,6 @@ class Pawn():
         for move in moves:
             if(self.isEnnemiesPos(ennemiesPawns,move)):
                 moves.remove(move)
-                
         if self.color == Colors.BLACK.value:
             target_positions = [((x + 1), (y + 1)), ((x - 1), (y + 1))]
         elif self.color == Colors.WHITE.value:
@@ -129,25 +140,39 @@ class Pawn():
                 if ennemiesPawn.getPos() == target_pos:
                     moves.append(target_pos)
         return moves
+    def getFilteredMoves(self, aliesPawns, ennemiesPawns):
+        moves = self.getStandardsMoves(aliesPawns, ennemiesPawns)
+        valid_moves = []
+        for move in moves:
+            if not self.is_king_in_check_after_move(move, aliesPawns, ennemiesPawns):
+               valid_moves.append(move)
+        return valid_moves
     
 class SlidingPieceSingle(Pawn):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str, starting_moves: list) -> None:
         super().__init__(x, y, sprite, color)
         self.starting_moves = starting_moves
-    def getMoves(self, aliesPawns, ennemiesPawns) -> list:
+    def getStandardsMoves(self, aliesPawns, ennemiesPawns) -> list:
         x,y = super().getPos()
-        return [(mx + x, my + y) for mx, my in self.starting_moves if not self.isOutOfBoard(mx+x, my+y) and not self.isAlliesPos(aliesPawns, (mx + x, my + y)) and not self.is_king_in_check_after_move((mx + x, my + y),aliesPawns,ennemiesPawns)]
+        return [(mx + x, my + y) for mx, my in self.starting_moves if not self.isOutOfBoard(mx+x, my+y) and not self.isAlliesPos(aliesPawns, (mx + x, my + y))]
+    def getFilteredMoves(self,aliesPawns, ennemiesPawns):
+        moves = self.getStandardsMoves(aliesPawns,ennemiesPawns)
+        for move in moves:
+            if self.is_king_in_check_after_move(move, aliesPawns, ennemiesPawns):
+                moves.remove(move)
+        return moves
+   
 class SlidingPieceMult(Pawn):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str, starting_moves: list) -> None:
         super().__init__(x, y, sprite, color)
         self.starting_moves = starting_moves
-    def getMoves(self, aliesPawns, ennemiesPawns) -> list:
+    def getStandardsMoves(self, aliesPawns, ennemiesPawns) -> list:
         moves = []
         x,y = super().getPos()
         for move in self.starting_moves:
             curr_x,curr_y = (x + move[0]), (y + move[1])
             stop_loop = False
-            while(not super().isOutOfBoard(curr_x, curr_y) and not super().isAlliesPos(aliesPawns,(curr_x,curr_y)) and not stop_loop and not self.is_king_in_check_after_move((curr_x, curr_y),aliesPawns,ennemiesPawns)):
+            while(not super().isOutOfBoard(curr_x, curr_y) and not super().isAlliesPos(aliesPawns,(curr_x,curr_y)) and not stop_loop):
                 if super().isEnnemiesPos(ennemiesPawns,(curr_x,curr_y)):
                     moves.append((curr_x, curr_y))
                     stop_loop = True
@@ -156,6 +181,15 @@ class SlidingPieceMult(Pawn):
                 curr_x,curr_y = (curr_x + move[0]), (curr_y + move[1])
             curr_x,curr_y = super().getPos()
         return moves
+    
+    def getFilteredMoves(self,aliesPawns, ennemiesPawns):
+        moves = self.getStandardsMoves(aliesPawns,ennemiesPawns)
+        for move in moves:
+            if self.is_king_in_check_after_move(move, aliesPawns, ennemiesPawns):
+                moves.remove(move)
+        return moves
+   
+
 
 class King(SlidingPieceSingle):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
@@ -165,6 +199,9 @@ class King(SlidingPieceSingle):
             (-1, -1),(1, -1),
         ]
         super().__init__(x, y, sprite,color,starting_moves)
+
+    def clone(self):
+        return King(self.x, self.y, self.sprite, self.color)
 
 class Queen(SlidingPieceMult):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
@@ -179,8 +216,9 @@ class Queen(SlidingPieceMult):
                 (1, -1),
             ]
             super().__init__(x, y, sprite,color,starting_moves)
-    #def clone(self):
-    #    return Queen(self.x, self.y, self.sprite, self.color)
+    
+    def clone(self):
+        return Queen(self.x, self.y, self.sprite, self.color)
 
 class Bishop(SlidingPieceMult):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
@@ -191,8 +229,8 @@ class Bishop(SlidingPieceMult):
             (1, -1),
         ]
         super().__init__(x, y, sprite,color,starting_moves)
-    #def clone(self):
-    #    return Bishop(self.x, self.y, self.sprite, self.color)
+    def clone(self):
+        return Bishop(self.x, self.y, self.sprite, self.color)
    
 class Rook(SlidingPieceMult):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
@@ -203,8 +241,8 @@ class Rook(SlidingPieceMult):
                 (-1, 0),
             ]
             super().__init__(x, y, sprite,color,starting_moves)
-    #def clone(self):
-     #   return Rook(self.x, self.y, self.sprite, self.color)
+    def clone(self):
+        return Rook(self.x, self.y, self.sprite, self.color)
 
 class Knight(SlidingPieceSingle):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str) -> None:
@@ -219,8 +257,8 @@ class Knight(SlidingPieceSingle):
             (-1, -2),
         ] 
         super().__init__(x, y, sprite,color,starting_moves)
-    #def clone(self):
-    #    return Rook(self.x, self.y, self.sprite, self.color)
+    def clone(self):
+        return Knight(self.x, self.y, self.sprite, self.color)
 
 game_on = True
 class Audio():
@@ -289,7 +327,7 @@ class Game():
             if isinstance(pawn, King):
                 king_pos = pawn.getPos()
         for enemy_pawn in enemy_pawns:
-            possible_moves = enemy_pawn.getMoves(enemy_pawns, self.actual_player.getPawns())
+            possible_moves = enemy_pawn.getFilteredMoves(enemy_pawns, self.actual_player.getPawns())
             if king_pos in possible_moves:
                 return True
         return False
@@ -304,9 +342,6 @@ class Game():
         #si y a rien un joueur a gagne 
         pass
     def handleClick(self) -> None:
-        #if self.king_is_check():
-            #print("check")
-            #audio.play("check.mp3")
         x = (( pygame.mouse.get_pos()[0]) // CELL_SIZE)  #position x du click
         y = (( pygame.mouse.get_pos()[1])// CELL_SIZE) #position y du click
         print("click à la position" , (x,y))
@@ -317,7 +352,7 @@ class Game():
         if self.selected_pawn != None:
             #print(self.selected_pawn.getColor())
             enemies_pawns = self.player2.getPawns() if (self.actual_player.getPawns() == self.player1.getPawns()) else self.player1.getPawns()
-            possible_moves = self.selected_pawn.getMoves(self.actual_player.getPawns(), enemies_pawns)
+            possible_moves = self.selected_pawn.getFilteredMoves(self.actual_player.getPawns(), enemies_pawns)
             print("moves clicked pawn", possible_moves)
 
             if (x, y) in possible_moves:
@@ -367,4 +402,4 @@ while game_on:
     game.make_board()#afficher le plateau
     game.placePawns()#afficher les pions sur le plateau
     pygame.display.update()
-    timer.tick(20)
+    timer.tick(60)
