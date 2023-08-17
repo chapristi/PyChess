@@ -91,22 +91,17 @@ class Pawn():
             if self.getPos() == cop_player_pawn.getPos():
                 #print("av",cop_player_pawn.getPos())
                 cop_player_pawn.setNewPos(move[0], move[1])
-                #print("ap", cop_player_pawn.getPos())
-        #print("mov", move[0], move[1])
-        
-        for pawn in copied_player_pawns:
-            if isinstance(pawn, King):
-                #print("king")
-                king_pos = pawn.getPos()
-                #print(king_pos)
-        
+                #in case of this move eat some pawn
+                for cop_opponent_pawn in copied_opponent_pawns:
+                    if cop_player_pawn.getPos() == cop_opponent_pawn.getPos():
+                        copied_opponent_pawns.remove(cop_opponent_pawn)
+
         for pawn in copied_player_pawns:
             if isinstance(pawn, King):
                 king_pos = pawn.getPos()
 
         for enemy_pawn in copied_opponent_pawns:
             possible_moves = enemy_pawn.getStandardsMoves(copied_opponent_pawns, copied_player_pawns)
-            #print("possible moves", possible_moves)
             if king_pos in possible_moves:
                 return True
         return False
@@ -155,12 +150,7 @@ class SlidingPieceSingle(Pawn):
     def getStandardsMoves(self, aliesPawns, ennemiesPawns) -> list:
         x,y = super().getPos()
         return [(mx + x, my + y) for mx, my in self.starting_moves if not self.isOutOfBoard(mx+x, my+y) and not self.isAlliesPos(aliesPawns, (mx + x, my + y))]
-    def getFilteredMoves(self,aliesPawns, ennemiesPawns):
-        moves = self.getStandardsMoves(aliesPawns,ennemiesPawns)
-        for move in moves:
-            if self.is_king_in_check_after_move(move, aliesPawns, ennemiesPawns):
-                moves.remove(move)
-        return moves
+   
    
 class SlidingPieceMult(Pawn):
     def __init__(self, x: int, y: int, sprite: pygame.Surface, color: str, starting_moves: list) -> None:
@@ -182,12 +172,7 @@ class SlidingPieceMult(Pawn):
             curr_x,curr_y = super().getPos()
         return moves
     
-    def getFilteredMoves(self,aliesPawns, ennemiesPawns):
-        moves = self.getStandardsMoves(aliesPawns,ennemiesPawns)
-        for move in moves:
-            if self.is_king_in_check_after_move(move, aliesPawns, ennemiesPawns):
-                moves.remove(move)
-        return moves
+    
    
 
 
